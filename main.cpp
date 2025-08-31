@@ -20,5 +20,7 @@ int main()
     int result = a + b;
     cout << "The result is: " << result << endl;
 
+    std::cout<< "Quanbiao He is very handsome!!";
+
     return 0;
 }
