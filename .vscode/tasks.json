@@ -1,0 +1,40 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "cppbuild",
+			"label": "C/C++: g++ 生成活动文件", //你会在其他地方看到这个任务的名字
+			"command": "/usr/bin/g++",
+			"args": [
+				"-fdiagnostics-color=always",
+				"-g",  // 生成调试信息，调试必备
+				"${file}",  // 当前活动文件
+				// 编译所有 .cpp 文件
+				// "${workspaceFolder}/*.cpp",
+				// 或者指定具体文件
+				// "${workspaceFolder}/main.cpp",
+				// "${workspaceFolder}/utils.cpp",
+				// "${workspaceFolder}/math.cpp",
+				"-o",  // 指定输出文件
+				"${fileDirname}/build/${fileBasenameNoExtension}"// 输出到当前目录，文件名与源文件相同（无扩展名）
+				// 你可以在这里添加更多的编译选项和库，例如：
+				// "-std=c++17", // 使用 C++17 标准
+				// "-Wall", // 开启所有警告
+				// "-I./include", // 添加头文件搜索路径
+				// "-L./lib", // 添加库文件搜索路径
+				// "-lmylibrary" // 链接名为 mylibrary 的库
+			],
+			"options": {
+				"cwd": "${fileDirname}"
+			},
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": {
+				"kind": "build",
+				"isDefault": true  //设置为 true 后，你可以按 Ctrl+Shift+B 直接运行这个编译任务。
+			},
+			"detail": "编译器: /usr/bin/g++"
+		}
+	]
+}
