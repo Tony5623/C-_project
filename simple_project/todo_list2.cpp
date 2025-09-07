@@ -29,7 +29,7 @@ private:
     const string filename = "todo_data2.txt";
 
 public:
-    TodoList() : nextId(1) // 将nextId初始化为1
+    TodoList() : nextId(1) // 初始化列表：在构造函数体执行之前初始化成员变量;将nextId初始化为1
     {
         loadFromFile();
     }
@@ -81,7 +81,7 @@ public:
     //保存任务到文件
     void saveToFile() {
         ofstream file(filename);  // 如果文件不存在：自动创建新文件;  如果文件已存在：清空文件内容并重新写入（覆盖模式）
-        for ( const auto& task : tasks)
+        for ( const auto& task : tasks)  //tasks容器中的单个任务（单数）;在循环中，task依次表示：任务1 → 任务2 → 任务3
         {
             file << task.id << "|"
                  << task.description << "|"
@@ -89,9 +89,44 @@ public:
                  << task.deueDate << "|"
                  << (task.completed ? "1" : "0") << "\n";
         }
+        file.close();        
+    }
+
+    void addTask(const string& description, const string& priority = "中", const string& dueData = ""){
+        tasks.emplace_back(nextId++, description, priority, dueData);
+        saveToFile();
+        std::cout << "✅ 任务添加成功! (ID: " << (nextId - 1) << ")" << std::endl;
+    }
+
+     // 验证日期格式
+    bool isValidDate(const string& date) {
+        if (date.empty()) return true;
+        if (date.length() != 10) return false;
+        if (date[4] != '-' || date[7] != '-') return false;
         
+        // 简单验证，实际项目中需要更复杂的验证
+        return true;
     }
 };
+
+// 显示帮助信息
+void showHelp() {
+    cout << "\n📖 使用说明:" << endl;
+    cout << "add <描述> [优先级] [截止日期] - 添加任务" << endl;
+    cout << "delete <ID>                   - 删除任务" << endl;
+    cout << "done <ID>                     - 标记任务完成" << endl;
+    cout << "undo <ID>                     - 标记任务未完成" << endl;
+    cout << "list                          - 显示所有任务" << endl;
+    cout << "active                        - 显示未完成任务" << endl;
+    cout << "priority <低/中/高>           - 按优先级筛选" << endl;
+    cout << "stats                         - 显示统计信息" << endl;
+    cout << "help                          - 显示帮助" << endl;
+    cout << "exit                          - 退出程序" << endl;
+    cout << "\n💡 示例:" << endl;
+    cout << "add \"学习C++\" 高 2025-09-04" << endl;
+    cout << "add \"买 groceries\" 中" << endl;
+    cout << "priority 高" << endl;
+}
 
 int main() {
     TodoList todolist;
@@ -103,7 +138,61 @@ int main() {
     while (true)
     {
         cout << "\n> ";
-        getline(cin, command);
+        getline(cin, command); //读取一整行输入，包括空格
+
+        if (command.empty()) continue;
+
+        stringstream ss(command);  //用用户输入的字符串创建stringstream对象
+        string action;
+        ss >> action;
+        cout << ss.str() << endl;
+
+        if (action == "exit" || action == "quit"){
+            cout << "👋 再见！" << endl;
+            break;
+        }
+        else if (action == "help")
+        {
+            showHelp();
+        }
+        else if (action == "add")
+        {
+            string description, priority = "中", dueDate = "";
+            string token; //临时存储提取的字符串片段
+            
+            cout << "初始化ss内容：" << ss.str() << endl;
+            // 读取描述
+            getline(ss, token, '"');
+            
+            cout << "第一次getline后token: '" << token << "'" << endl;
+            cout << "第一次getline后ss内容: " << ss.str() << endl;
+            
+            getline(ss, description,'"');
+            cout << "第二次getline后description: '" << description << "'" << endl;
+            cout << "第二次getline后ss内容: " << ss.str() << endl;
+            if (description.empty()) {
+                cout << "❌ 请输入任务描述" << endl;
+                continue;
+            }
+
+            // 读取可选参数
+            cout << "ss:" << ss.str() << endl; //ss.str()返回的是整个字符串流的原始内容;
+            //读取位置已经移动
+            
+            while (ss >> token) {
+                cout << "token:" << token << endl;
+                if (token == "高" || token == "中" || token == "低") {
+                    priority = token;
+                } else if (todolist.isValidDate(token)) {
+                    dueDate = token;
+                }
+            }
+
+
+
+
+            todolist.addTask(description, priority, dueDate);
+        }
     }
     
 
