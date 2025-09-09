@@ -89,7 +89,7 @@ public:
 
     // 删除任务
     void deleteTask(int id) {
-        auto it = find_if(tasks.begin(), tasks.end(), 
+        auto it = find_if(tasks.begin(), tasks.end(),
             [id](const Task& task) { return task.id == id; });
         
         if (it != tasks.end()) {

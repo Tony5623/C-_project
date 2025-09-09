@@ -15,11 +15,11 @@ struct Task
     int id;
     string description;
     string priority;
-    string deueDate;
+    string dueDate;
     bool completed;
 
     Task(int i, string desc, string pri = "中", string date = "", bool comp = false)
-        :id(i), description(desc), priority(pri), deueDate(date), completed(comp){}
+        :id(i), description(desc), priority(pri), dueDate(date), completed(comp){}
 };
 
 class TodoList{
@@ -86,7 +86,7 @@ public:
             file << task.id << "|"
                  << task.description << "|"
                  << task.priority << "|"
-                 << task.deueDate << "|"
+                 << task.dueDate << "|"
                  << (task.completed ? "1" : "0") << "\n";
         }
         file.close();        
@@ -96,6 +96,116 @@ public:
         tasks.emplace_back(nextId++, description, priority, dueData);
         saveToFile();
         std::cout << "✅ 任务添加成功! (ID: " << (nextId - 1) << ")" << std::endl;
+    }
+
+    void changeTaskPriority(int id, const string& newPriority){
+        // 检查优先级是否有效
+        if (newPriority != "高" && newPriority != "中" && newPriority != "低") {
+            cout << "❌ 无效的优先级！请使用'高'、'中'或'低'" << endl;
+            return;
+        }
+
+        auto it = find_if(tasks.begin(), tasks.end(), [id](const Task& task){return task.id == id;});
+        if (it != tasks.end()) {
+            string oldPriority = it->priority;
+            it->priority = newPriority;
+            saveToFile();
+            cout << "✅ 任务ID " << id << " 的优先级已从 '" 
+             << oldPriority << "' 修改为 '" << newPriority << "'" << endl;
+        } else {
+            cout << "❌ 未找到ID为 " << id << " 的任务" << endl;
+        }
+
+    }
+    void deleteTask(int id){
+        /*
+        find_if()：在容器中查找满足条件的元素
+        参数：
+
+            tasks.begin()：查找起始位置
+            tasks.end()：查找结束位置
+            第三个参数：判断条件的函数（这里用了lambda表达式
+        
+        Lambda表达式：
+            [id]：捕获列表 - 让lambda函数可以访问外部变量id
+            (const Task& task)：参数列表 - 接受一个Task对象的常量引用
+            { return task.id == id; }：函数体 - 比较任务的ID是否等于要查找的id
+        */
+        auto it = find_if(tasks.begin(), tasks.end(), [id](const Task& task) {return task.id == id;});
+        if (it != tasks.end()){
+            tasks.erase(it);
+            saveToFile();
+            cout << "✅ 任务删除成功!" << endl; 
+        } else {
+            cout << "❌ 未找到ID为 " << id << " 的任务" << endl;
+        }
+    }
+
+    void flagTask(int id){
+        auto it = find_if(tasks.begin(), tasks.end(), [id](const Task& task) { return task.id == id;});
+
+        if (it != tasks.end()){
+            it->completed = !it->completed;
+            saveToFile();
+            cout << "✅ 任务状态已更新!" << endl;
+        } else {
+            cout << "❌ 未找到ID为 " << id << " 的任务" << endl;
+        }
+    }
+
+    void showTasks(bool showCompleted = true, const string& filterPriority = ""){
+        if (tasks.empty()) {
+            cout << "📝 当前没有待办任务!" << endl;
+            return;
+        }
+
+        cout << "\n📋 待办事项列表:" << endl;
+        cout << "==============================================" << endl;
+        cout << left << setw(4) << "ID" << setw(8) << "状态" 
+             << setw(6) << "优先级" << setw(12) << "截止日期" 
+             << "描述" << endl;
+        cout << "==============================================" << endl;
+
+        for (const auto& task : tasks){
+            if (!showCompleted && task.completed) continue;
+            if (!filterPriority.empty() && task.priority != filterPriority) continue;
+
+            string status = task.completed ? "✅" : "⏳";
+            string priorityEmoji;
+            if (task.priority == "高") priorityEmoji = "🔴";
+            else if (task.priority == "中") priorityEmoji = "🟡";
+            else priorityEmoji = "🟢";
+
+            cout << left << setw(4) << task.id 
+                 << setw(8) << status
+                 << setw(6) << (priorityEmoji + task.priority)
+                 << setw(12) << (task.dueDate.empty() ? "无" : task.dueDate)
+                 << task.description << endl;
+        }
+
+    }
+
+
+    // 显示统计信息
+    void showStats(){
+        int total = tasks.size();
+        int completed = count_if(tasks.begin(),tasks.end(), [](const Task& task){return task.completed;});
+
+        cout << "\n📊 任务统计:" << endl;
+        cout << "总任务: " << total << endl;
+        cout << "已完成: " << completed << endl;
+        cout << "未完成: " << (total - completed) << endl;
+        cout << "完成率: " << (total > 0 ? (completed * 100 / total) : 0) << "%" << endl;
+    }
+
+
+    // 获取当前日期（用于日期验证）
+    string getCurrentDate() {
+        time_t now = time(0);
+        tm* ltm = localtime(&now);
+        char buffer[11];
+        strftime(buffer, sizeof(buffer), "%Y-%m-%d", ltm);
+        return string(buffer);
     }
 
      // 验证日期格式
@@ -116,6 +226,7 @@ void showHelp() {
     cout << "delete <ID>                   - 删除任务" << endl;
     cout << "done <ID>                     - 标记任务完成" << endl;
     cout << "undo <ID>                     - 标记任务未完成" << endl;
+    cout << "changepri <ID> [优先级]        - 改变现有任务的优先级" << endl;
     cout << "list                          - 显示所有任务" << endl;
     cout << "active                        - 显示未完成任务" << endl;
     cout << "priority <低/中/高>           - 按优先级筛选" << endl;
@@ -187,11 +298,57 @@ int main() {
                     dueDate = token;
                 }
             }
-
-
-
-
             todolist.addTask(description, priority, dueDate);
+        }
+
+        else if (action == "changepri")
+        {
+            int id;
+            string newpriority;
+            if (ss >> id >> newpriority) {
+                todolist.changeTaskPriority(id, newpriority);
+            } else {
+                cout << "❌ 请输入有效的任务ID 或者 优先级" << endl;
+            }
+        }
+
+        else if (action == "list")
+        {
+            todolist.showTasks(true);
+        }
+        else if (action == "status")
+        {
+            todolist.showStats();
+        }
+        else if (action == "delete")
+        {
+            int id;
+            if (ss >> id){
+                todolist.deleteTask(id);
+            } else {
+                cout << "❌ 请输入有效的任务ID" << endl;
+            }
+        }
+        else if (action == "done" || action == "undo")
+        {
+            int id;
+            if (ss >> id){
+                todolist.flagTask(id);
+
+            } else {
+                cout << "❌ 请输入有效的任务ID" << endl;
+            }
+        }
+        else if (action == "priority") {
+            string priority;
+            if (ss >> priority && (priority == "高" || priority == "中" || priority == "低")) {
+                todolist.showTasks(true, priority);
+            } else {
+                cout << "❌ 请输入有效的优先级(高/中/低)" << endl;
+            }
+        }
+        else {
+            cout << "❌ 未知命令，输入 'help' 查看使用说明" << endl;
         }
     }
     
