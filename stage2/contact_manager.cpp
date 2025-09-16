@@ -141,7 +141,7 @@ private:
 
     // 检查是否已存在同名联系人
     bool contactExists(const string& name) {
-        for (const auto& contact : contacts) {
+        for (const auto& contact : contacts) {  // 遍历所有联系人： const auto& contact : contacts
             if (contact->getName() == name) {
                 return true;
             }
@@ -152,7 +152,7 @@ private:
     // 字符串转换为小写（用于不区分大小写的搜索）
     string toLower(const string& str) const {
         string lowerStr = str;
-        transform(lowerStr.begin(), lowerStr.end(), lowerStr.begin(), ::tolower);
+        transform(lowerStr.begin(), lowerStr.end(), lowerStr.begin(), ::tolower);  // ::的作用：使用全局命名空间中的tolower函数，避免与其他可能同名的函数冲突
         return lowerStr;
     }
 
@@ -163,7 +163,7 @@ public:
 
     // 从文件加载联系人
     void loadFromFile() {
-        ifstream file(filename);
+        ifstream file(filename);  // 创建输入文件流
         if (!file.is_open()) {
             cout << "📁 未找到联系人文件，创建新的通讯录..." << endl;
             return;
@@ -171,15 +171,15 @@ public:
 
         contacts.clear();
         string line;
-        while (getline(file, line)) {
+        while (getline(file, line)) {  // 逐行读取
             if (line.empty()) continue;
             
-            stringstream ss(line);
-            string token;
-            vector<string> tokens;
+            stringstream ss(line); // 使用字符串流解析行数据
+            string token;  // 存储每个字段
+            vector<string> tokens;  // 存储所有字段
             
-            while (getline(ss, token, '|')) {
-                tokens.push_back(token);
+            while (getline(ss, token, '|')) {  // 按'|'分隔符分割字段
+                tokens.push_back(token);  // 将字段添加到向量
             }
             
             if (tokens.size() >= 4) {
